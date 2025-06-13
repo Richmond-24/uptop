@@ -1,0 +1,122 @@
+
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { openDB } from 'idb';
+import { FaFolder, FaFile, FaDownload, FaChevronRight } from 'react-icons/fa';
+import toast, { Toaster } from 'react-hot-toast';
+
+interface FileData {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  content: ArrayBuffer;
+  isFolder?: boolean;
+  parentId?: string | null;
+  shareId?: string;
+  sharedAt?: string;
+}
+
+const DB_NAME = 'driveDB';
+const FILE_STORE = 'files';
+
+async function initDB() {
+  return openDB(DB_NAME, 3, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(FILE_STORE)) {
+        db.createObjectStore(FILE_STORE, { keyPath: 'id' });
+      }
+    },
+  });
+}
+
+export default function SharedFilesPage() {
+  const [sharedItems, setSharedItems] = useState<FileData[]>([]);
+  const [folderPath, setFolderPath] = useState<{ id: string | null; name: string }[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSharedItems();
+  }, [currentFolderId]);
+
+  const fetchSharedItems = async () => {
+    const db = await initDB();
+    const all = await db.getAll(FILE_STORE);
+    const filtered = all.filter((f) => f.shareId && f.parentId === currentFolderId);
+    setSharedItems(filtered);
+  };
+
+  const openFile = (file: FileData) => {
+    if (file.isFolder) {
+      setCurrentFolderId(file.id);
+      setFolderPath((prev) => [...prev, { id: file.id, name: file.name }]);
+    } else {
+      const blob = new Blob([file.content], { type: file.type });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleBreadcrumbClick = (id: string | null, index: number) => {
+    setCurrentFolderId(id);
+    setFolderPath((prev) => prev.slice(0, index + 1));
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-6">
+      <Toaster />
+      <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">Shared Items</h1>
+
+        {folderPath.length > 0 && (
+          <div className="text-sm text-blue-600 flex gap-2 items-center mb-4 flex-wrap">
+            <span
+              className="cursor-pointer hover:underline"
+              onClick={() => {
+                setCurrentFolderId(null);
+                setFolderPath([]);
+              }}
+            >
+              Shared
+            </span>
+            {folderPath.map((folder, index) => (
+              <React.Fragment key={folder.id}>
+                <FaChevronRight className="text-gray-400 text-xs" />
+                <span
+                  className="cursor-pointer hover:underline"
+                  onClick={() => handleBreadcrumbClick(folder.id, index)}
+                >
+                  {folder.name}
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+
+        {sharedItems.length === 0 ? (
+          <p className="text-gray-500">No shared items found.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {sharedItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow hover:shadow-md cursor-pointer transition-all duration-200"
+                onClick={() => openFile(item)}
+              >
+                <div className="text-center text-4xl text-blue-600 mb-2">
+                  {item.isFolder ? <FaFolder /> : <FaFile />}
+                </div>
+                <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
+                <p className="text-xs text-gray-500">{(item.size / 1024).toFixed(2)} KB</p>
+                <p className="text-xs text-green-600 mt-1">
+                  Shared: {new Date(item.sharedAt || '').toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
