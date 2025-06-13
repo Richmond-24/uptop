@@ -25,12 +25,19 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
     try {
       await signInWithEmailAndPassword(auth, formData.email.trim(), formData.password.trim())
       toast.success('Signed in successfully!')
       setTimeout(() => router.push('/homepage'), 1500)
     } catch (error: any) {
-      toast.error(error.message || 'Sign in failed')
+      if (error.code === 'auth/user-not-found') {
+        toast.error('No account found with this email.')
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('Incorrect password.')
+      } else {
+        toast.error(error.message || 'Sign in failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -67,7 +74,7 @@ export default function SignInPage() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
             />
           </div>
 
@@ -80,7 +87,7 @@ export default function SignInPage() {
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
             />
           </div>
 
@@ -88,7 +95,7 @@ export default function SignInPage() {
             type="submit"
             disabled={loading}
             className={`w-full text-white py-2.5 rounded-xl font-semibold transition duration-200 ${
-              loading ? 'bg-blue-300 cursor-not-allowed' : 'bg-pink-600 hover:bg-pink-700'
+              loading ? 'bg-pink-300 cursor-not-allowed' : 'bg-pink-600 hover:bg-pink-700'
             }`}
           >
             {loading ? 'Signing In...' : 'Sign In'}
@@ -99,7 +106,7 @@ export default function SignInPage() {
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
-            className="w-full bg-white border border-gray-300 rounded-xl py-2 text-sm font-medium hover:bg-gray-100"
+            className="w-full bg-white border border-gray-300 rounded-xl py-2 text-sm font-medium hover:bg-gray-100 flex justify-center items-center"
           >
             {googleLoading ? 'Loading...' : 'Continue with Google'}
           </button>

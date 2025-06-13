@@ -9,7 +9,7 @@ import Cropper from 'react-easy-crop'
 import getCroppedImg from '@/lib/CropImage'
 
 const CLOUDINARY_UPLOAD_PRESET = 'profile_pictures'
-const CLOUDINARY_CLOUD_NAME = 'dayhseodf' // Replace with your actual Cloudinary cloud name
+const CLOUDINARY_CLOUD_NAME = 'dayhseodf'
 const CLOUDINARY_API_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`
 
 export default function ProfilePage() {
@@ -97,19 +97,19 @@ export default function ProfilePage() {
   if (!user) return <div className="text-center mt-8">Please sign in to view your profile.</div>
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 px-4">
-      <div className="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg space-y-8">
+    <div className="flex justify-center items-start min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 px-4 py-10">
+      <div className="w-full max-w-3xl bg-white p-6 sm:p-10 rounded-2xl shadow-lg space-y-8">
         <h2 className="text-3xl font-bold text-center text-gray-800">User Profile</h2>
 
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <img
             src={user.photoURL || '/default-profile.png'}
-            alt="Profile Photo"
-            className="w-28 h-28 rounded-full object-cover border-4 border-indigo-400 shadow-sm"
+            alt="Profile"
+            className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-indigo-400 shadow-sm"
           />
-          <div className="text-center sm:text-left">
+          <div className="flex-1 space-y-2 text-center sm:text-left">
             {editingName ? (
-              <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-start">
                 <input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -123,17 +123,25 @@ export default function ProfilePage() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <p className="text-xl font-medium text-gray-800">{user.displayName || 'User'}</p>
-                <button
-                  onClick={() => setEditingName(true)}
-                  className="text-sm text-indigo-600 underline"
-                >
-                  Edit Name
-                </button>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2">
+                  <p className="text-xl font-semibold text-gray-800">{user.displayName || 'User'}</p>
+                  <button
+                    onClick={() => setEditingName(true)}
+                    className="text-sm text-indigo-600 underline"
+                  >
+                    Edit
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 break-words">{user.email}</p>
               </div>
             )}
-            <p className="text-gray-500 text-sm mt-1">{user.email}</p>
+
+            <div className="text-sm text-gray-600 mt-2 space-y-1">
+              <p><strong>UID:</strong> <span className="break-all">{user.uid}</span></p>
+              <p><strong>Last Login:</strong> {new Date(user.metadata.lastSignInTime || '').toLocaleString()}</p>
+              <p><strong>Joined:</strong> {new Date(user.metadata.creationTime || '').toLocaleDateString()}</p>
+            </div>
           </div>
         </div>
 
@@ -155,7 +163,7 @@ export default function ProfilePage() {
         </div>
 
         {imageSrc && (
-          <div className="relative w-full h-72 bg-gray-100 rounded-xl overflow-hidden">
+          <div className="relative w-full h-72 sm:h-[400px] bg-gray-100 rounded-xl overflow-hidden">
             <Cropper
               image={imageSrc}
               crop={crop}

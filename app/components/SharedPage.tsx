@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { openDB } from 'idb';
-import { FaFolder, FaFile, FaDownload, FaChevronRight } from 'react-icons/fa';
+import { FaFolder, FaFile, FaChevronRight, FaUpload, FaWhatsapp } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface FileData {
@@ -63,11 +63,64 @@ export default function SharedFilesPage() {
     setFolderPath((prev) => prev.slice(0, index + 1));
   };
 
+  const shareViaWhatsApp = (file: FileData) => {
+    try {
+      let message = '';
+      if (file.isFolder) {
+        message = `📁 "${file.name}" folder has been shared with you. Open it inside the app.`;
+      } else {
+        const blob = new Blob([file.content], { type: file.type });
+        const fileUrl = URL.createObjectURL(blob);
+        message = `📄 File: *${file.name}* (${(file.size / 1024).toFixed(2)} KB)\nOpen it: ${fileUrl}`;
+      }
+
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } catch (err) {
+      toast.error('Unable to share file via WhatsApp');
+    }
+  };
+
+  const handleImportSharedFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed: FileData[] = JSON.parse(text);
+
+      const db = await initDB();
+      const tx = db.transaction(FILE_STORE, 'readwrite');
+      const store = tx.objectStore(FILE_STORE);
+
+      for (const item of parsed) {
+        item.sharedAt = new Date().toISOString(); // tag as recently imported
+        await store.put(item);
+      }
+
+      toast.success('Imported shared files successfully!');
+      fetchSharedItems(); // refresh view
+    } catch (err) {
+      toast.error('Failed to import shared file');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <Toaster />
-      <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Shared Items</h1>
+      <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-800">Shared Items</h1>
+          <label className="flex items-center gap-2 cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm">
+            <FaUpload /> Import Shared File
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportSharedFile}
+              className="hidden"
+            />
+          </label>
+        </div>
 
         {folderPath.length > 0 && (
           <div className="text-sm text-blue-600 flex gap-2 items-center mb-4 flex-wrap">
@@ -101,10 +154,12 @@ export default function SharedFilesPage() {
             {sharedItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow hover:shadow-md cursor-pointer transition-all duration-200"
-                onClick={() => openFile(item)}
+                className="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow hover:shadow-md transition-all duration-200"
               >
-                <div className="text-center text-4xl text-blue-600 mb-2">
+                <div
+                  className="text-center text-4xl text-blue-600 mb-2 cursor-pointer"
+                  onClick={() => openFile(item)}
+                >
                   {item.isFolder ? <FaFolder /> : <FaFile />}
                 </div>
                 <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
@@ -112,6 +167,13 @@ export default function SharedFilesPage() {
                 <p className="text-xs text-green-600 mt-1">
                   Shared: {new Date(item.sharedAt || '').toLocaleString()}
                 </p>
+                <button
+                  onClick={() => shareViaWhatsApp(item)}
+                  className="mt-2 w-full flex items-center justify-center gap-2 text-white bg-green-600 hover:bg-green-700 text-xs py-1.5 rounded"
+                >
+                  <FaWhatsapp className="text-white" />
+                  Share via WhatsApp
+                </button>
               </div>
             ))}
           </div>

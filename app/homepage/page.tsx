@@ -10,7 +10,6 @@ import {
   Upload,
   Trash2,
   Home,
-  Settings,
   User,
 } from 'lucide-react'
 
@@ -20,7 +19,6 @@ import Recent from '../components/Recent'
 import ProfilePage from '../components/ProfilePage'
 import SharedPage from '../components/SharedPage'
 import HomePage from '../components/HomePage'
-
 const menuItems = [
   { name: 'Home', icon: Home, key: 'home' },
   { name: 'My Drive', icon: Folder, key: 'drive' },

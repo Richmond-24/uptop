@@ -84,10 +84,6 @@ export default function SignUpPage() {
     }
   }
 
-  const handleLinkedInSignIn = () => {
-    toast.error('LinkedIn sign-in requires custom OAuth setup')
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl space-y-6">
@@ -151,15 +147,9 @@ export default function SignUpPage() {
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
-            className="w-full bg-white border border-gray-300 rounded-xl py-2 text-sm font-medium hover:bg-gray-100"
+            className="w-full bg-[#4285F4] text-white rounded-xl py-2 text-sm font-medium hover:bg-[#357ae8] transition"
           >
             {googleLoading ? 'Loading...' : 'Continue with Google'}
-          </button>
-          <button
-            onClick={handleLinkedInSignIn}
-            className="w-full bg-white border border-gray-300 rounded-xl py-2 text-sm font-medium hover:bg-gray-100"
-          >
-            Continue with LinkedIn
           </button>
         </div>
 

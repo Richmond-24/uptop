@@ -164,7 +164,7 @@ const DrivePage = () => {
   isFolder: !!file.webkitRelativePath && file.webkitRelativePath.includes('/'),
   webkitRelativePath: file.webkitRelativePath || '',
   parentId: currentFolder,
-  createdAt: Date.now(), // ✅ Add this line
+  createdAt: Date.now(), 
 };
 
       await db.put(FILE_STORE, fileData);
