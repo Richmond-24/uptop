@@ -263,180 +263,165 @@ const DrivePage = () => {
       f.type.toLowerCase().includes(search.toLowerCase())
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50 relative">
-      {/* Toaster */}
-      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+ // [truncated imports and logic above]
 
-      {/* Header */}
-      <div className="sticky top-0 bg-white z-10 border-b shadow-sm p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <img src="/first.png" alt="Logo" className="w-8 h-8 object-contain" />
-          <h1 className="text-2xl font-bold text-pink-800">My Drive</h1>
-        </div>
+return (
+  <div className="min-h-screen bg-gray-50 relative">
+    <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
-        <div className="flex w-full md:w-1/3 items-center border rounded-lg px-3 py-2">
-          <FaSearch className="text-gray-400 mr-2" />
-          <input
-            type="text"
-            placeholder="Search files..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full outline-none text-sm"
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-          >
-            <FaUpload /> File
-          </button>
-          <button
-            onClick={() => folderInputRef.current?.click()}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-          >
-            <FaFolder /> Upload Folder
-          </button>
-          <button
-            onClick={handleCreateFolder}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-          >
-            <FaPlus /> New Folder
-          </button>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleUpload}
-            multiple
-            className="hidden"
-          />
-          <input
-            type="file"
-            ref={folderInputRef}
-            onChange={handleUpload}
-            multiple
-            className="hidden"
-            //@ts-ignore
-            webkitdirectory=""
-            directory=""
-          />
-        </div>
+    {/* Header */}
+    <div className="sticky top-0 bg-white z-10 border-b shadow-sm p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex items-center gap-2">
+        <img src="/first.png" alt="Logo" className="w-8 h-8 object-contain" />
+        <h1 className="text-2xl font-bold text-pink-800">My Drive</h1>
       </div>
 
-      {/* Breadcrumb */}
-      <div className="p-4 text-sm flex items-center flex-wrap gap-1">
-        {folderPath.map((f, i) => (
-          <span key={f.id ?? 'root'} className="flex items-center gap-1">
-            <span
-              className="text-blue-600 hover:underline cursor-pointer"
-              onClick={() => handleBreadcrumbClick(f.id, i)}
-            >
-              {f.name}
-            </span>
-            {i < folderPath.length - 1 && (
-              <FaChevronRight className="text-gray-400 text-xs" />
-            )}
-          </span>
-        ))}
+      <div className="flex w-full md:w-1/3 items-center border rounded-lg px-3 py-2">
+        <FaSearch className="text-gray-400 mr-2" />
+        <input
+          type="text"
+          placeholder="Search files..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full outline-none text-sm"
+        />
       </div>
 
-      {/* Main Content */}
-      <div className="p-4">
-        {/* Storage Bar */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-700 mb-1">
-            Storage Used:{' '}
-            {(usedStorage / (1024 * 1024)).toFixed(2)} MB /{' '}
-            {(STORAGE_LIMIT / (1024 * 1024)).toFixed(2)} MB
-          </p>
-          <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-            <div
-              className="bg-blue-500 h-full"
-              style={{ width: `${(usedStorage / STORAGE_LIMIT) * 100}%` }}
-            />
-          </div>
-        </div>
+      <div className="flex gap-2">
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+        >
+          <FaUpload /> File
+        </button>
 
-        {selected.size > 0 && (
-          <div className="mb-4">
-            <button
-              onClick={handleDeleteSelected}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
-            >
-              Delete Selected ({selected.size})
-            </button>
-          </div>
-        )}
+        <button
+          onClick={handleCreateFolder}
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+        >
+          <FaPlus /> New Folder
+        </button>
 
-        <h2 className="text-xl font-semibold mb-4">Files</h2>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {filtered.map((file) => (
-            <motion.div
-              key={file.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className={`bg-white p-4 rounded-xl shadow-md transition-all duration-300 border cursor-pointer ${
-                selected.has(file.id) ? 'border-blue-500' : 'border-transparent'
-              }`}
-              onClick={() => handleOpen(file)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleSelect(file.id);
-              }}
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="text-4xl text-blue-500 mb-2">
-                  {file.isFolder ? <FaFolder /> : <FaFile />}
-                </div>
-                <p className="font-medium text-gray-800 truncate w-full">
-                  {file.name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {(file.size / 1024).toFixed(1)} KB
-                </p>
-                <span
-                  className={`mt-2 text-xs font-semibold px-2 py-1 rounded-full ${
-                    file.isFolder
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {file.isFolder
-                    ? 'Folder'
-                    : file.type.split('/')[1]?.toUpperCase() || 'File'}
-                </span>
-              </div>
-              <div className="flex justify-between mt-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(file.id);
-                  }}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <FaTrash />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare(file);
-                  }}
-                  className="text-green-500 hover:text-green-700"
-                >
-                  <FaShareAlt />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleUpload}
+          multiple
+          className="hidden"
+        />
+        <input
+          type="file"
+          ref={folderInputRef}
+          onChange={handleUpload}
+          multiple
+          className="hidden"
+          //@ts-ignore
+          webkitdirectory=""
+          directory=""
+        />
       </div>
     </div>
-  );
-};
 
+    {/* Breadcrumb */}
+    <div className="p-4 text-sm flex items-center flex-wrap gap-1">
+      {folderPath.map((f, i) => (
+        <span key={f.id ?? 'root'} className="flex items-center gap-1">
+          <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => handleBreadcrumbClick(f.id, i)}
+          >
+            {f.name}
+          </span>
+          {i < folderPath.length - 1 && (
+            <FaChevronRight className="text-gray-400 text-xs" />
+          )}
+        </span>
+      ))}
+    </div>
+
+    {/* Main Content */}
+    <div className="p-4">
+      {/* Storage Bar */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-700 mb-1">
+          Storage Used: {(usedStorage / (1024 * 1024)).toFixed(2)} MB / {(STORAGE_LIMIT / (1024 * 1024)).toFixed(2)} MB
+        </p>
+        <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+          <div
+            className="bg-blue-500 h-full"
+            style={{ width: `${(usedStorage / STORAGE_LIMIT) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {selected.size > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={handleDeleteSelected}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            Delete Selected ({selected.size})
+          </button>
+        </div>
+      )}
+
+      <h2 className="text-xl font-semibold mb-4">Files</h2>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {filtered.map((file) => (
+          <motion.div
+            key={file.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className={`bg-white p-4 rounded-xl shadow-md transition-all duration-300 border cursor-pointer ${
+              selected.has(file.id) ? 'border-blue-500' : 'border-transparent'
+            }`}
+            onClick={() => handleOpen(file)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              handleSelect(file.id);
+            }}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="text-4xl text-blue-500 mb-2">
+                {file.isFolder ? <FaFolder /> : <FaFile />}
+              </div>
+              <p className="font-medium text-gray-800 truncate w-full">{file.name}</p>
+              <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+              <span
+                className={`mt-2 text-xs font-semibold px-2 py-1 rounded-full ${
+                  file.isFolder ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {file.isFolder ? 'Folder' : file.type.split('/')[1]?.toUpperCase() || 'File'}
+              </span>
+            </div>
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(file.id);
+                }}
+                className="text-red-500 hover:text-red-700"
+              >
+                <FaTrash />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare(file);
+                }}
+                className="text-green-500 hover:text-green-700"
+              >
+                <FaShareAlt />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+}
 export default DrivePage;

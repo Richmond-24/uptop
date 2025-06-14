@@ -82,20 +82,21 @@ const TrashPage = () => {
                   {(file.size / 1024).toFixed(1)} KB
                 </p>
               </div>
-              <div className="flex justify-between mt-4">
-                <button
-                  onClick={() => restoreFile(file)}
-                  className="text-green-600 hover:text-green-800 text-sm flex items-center gap-1"
-                >
-                  <FaTrashRestore /> Restore
-                </button>
-                <button
-                  onClick={() => permanentlyDelete(file.id)}
-                  className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-                >
-                  <FaTimesCircle /> Delete
-                </button>
-              </div>
+             <div className="flex justify-between mt-4 gap-2 flex-wrap text-xs sm:text-sm">
+  <button
+    onClick={() => restoreFile(file)}
+    className="flex-1 flex items-center justify-center gap-1 text-green-600 hover:text-green-800 px-2 py-1 rounded"
+  >
+    <FaTrashRestore className="text-sm" /> Restore
+  </button>
+  <button
+    onClick={() => permanentlyDelete(file.id)}
+    className="flex-1 flex items-center justify-center gap-1 text-red-600 hover:text-red-800 px-2 py-1 rounded"
+  >
+    <FaTimesCircle className="text-sm" /> Delete
+  </button>
+</div>
+
             </motion.div>
           ))}
         </div>

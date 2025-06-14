@@ -3,7 +3,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { openDB } from 'idb';
-import { FaFolder, FaFile, FaChevronRight, FaUpload, FaWhatsapp } from 'react-icons/fa';
+import {
+  FaFolder,
+  FaFile,
+  FaChevronRight,
+  FaUpload,
+  FaWhatsapp,
+} from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface FileData {
@@ -36,6 +42,9 @@ export default function SharedFilesPage() {
   const [folderPath, setFolderPath] = useState<{ id: string | null; name: string }[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
+  const [showModal, setShowModal] = useState(false);
+  const [fileToShare, setFileToShare] = useState<FileData | null>(null);
+
   useEffect(() => {
     fetchSharedItems();
   }, [currentFolderId]);
@@ -63,21 +72,29 @@ export default function SharedFilesPage() {
     setFolderPath((prev) => prev.slice(0, index + 1));
   };
 
-  const shareViaWhatsApp = (file: FileData) => {
+  const downloadSharedFile = (file: FileData) => {
     try {
-      let message = '';
-      if (file.isFolder) {
-        message = `📁 "${file.name}" folder has been shared with you. Open it inside the app.`;
-      } else {
-        const blob = new Blob([file.content], { type: file.type });
-        const fileUrl = URL.createObjectURL(blob);
-        message = `📄 File: *${file.name}* (${(file.size / 1024).toFixed(2)} KB)\nOpen it: ${fileUrl}`;
-      }
+      const fileToExport = {
+        ...file,
+        sharedAt: new Date().toISOString(),
+      };
 
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+      const blob = new Blob([JSON.stringify([fileToExport])], {
+        type: 'application/json',
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${file.name.replace(/\s+/g, '_')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setFileToShare(file);
+      setTimeout(() => setShowModal(true), 300);
     } catch (err) {
-      toast.error('Unable to share file via WhatsApp');
+      toast.error('Failed to prepare file for sharing');
     }
   };
 
@@ -94,12 +111,12 @@ export default function SharedFilesPage() {
       const store = tx.objectStore(FILE_STORE);
 
       for (const item of parsed) {
-        item.sharedAt = new Date().toISOString(); // tag as recently imported
+        item.sharedAt = new Date().toISOString();
         await store.put(item);
       }
 
       toast.success('Imported shared files successfully!');
-      fetchSharedItems(); // refresh view
+      fetchSharedItems();
     } catch (err) {
       toast.error('Failed to import shared file');
     }
@@ -111,14 +128,14 @@ export default function SharedFilesPage() {
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Shared Items</h1>
-          <label className="flex items-center gap-2 cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 text-sm">
-            <FaUpload /> Import Shared File
+          <label className="text-sm text-blue-600 cursor-pointer">
             <input
               type="file"
               accept=".json"
-              onChange={handleImportSharedFile}
               className="hidden"
+              onChange={handleImportSharedFile}
             />
+            Import Shared File
           </label>
         </div>
 
@@ -150,7 +167,7 @@ export default function SharedFilesPage() {
         {sharedItems.length === 0 ? (
           <p className="text-gray-500">No shared items found.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {sharedItems.map((item) => (
               <div
                 key={item.id}
@@ -168,17 +185,51 @@ export default function SharedFilesPage() {
                   Shared: {new Date(item.sharedAt || '').toLocaleString()}
                 </p>
                 <button
-                  onClick={() => shareViaWhatsApp(item)}
-                  className="mt-2 w-full flex items-center justify-center gap-2 text-white bg-green-600 hover:bg-green-700 text-xs py-1.5 rounded"
+                  onClick={() => downloadSharedFile(item)}
+                  className="mt-2 w-full flex items-center justify-center gap-2 text-white bg-blue-600 hover:bg-blue-700 text-xs py-1.5 rounded"
                 >
-                  <FaWhatsapp className="text-white" />
-                  Share via WhatsApp
+                  <FaUpload />
+                  Download
                 </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Share Confirmation Modal */}
+      {showModal && fileToShare && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-lg">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Share via WhatsApp?
+            </h2>
+            <p className="text-sm text-gray-600 mb-6">
+              You've downloaded "<strong>{fileToShare.name}</strong>".<br />
+              Do you want to share it via WhatsApp now?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
+              >
+                No, Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const message = `📁 I've just downloaded and want to share "${fileToShare.name}" with you. Please import the .json file in your app.`;
+                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+                  window.open(whatsappUrl, '_blank');
+                  setShowModal(false);
+                }}
+                className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm"
+              >
+                Yes, Share
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
