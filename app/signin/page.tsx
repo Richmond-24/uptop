@@ -43,18 +43,7 @@ export default function SignInPage() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true)
-    try {
-      await signInWithPopup(auth, googleProvider)
-      toast.success('Signed in with Google!')
-      router.push('/homepage')
-    } catch (error: any) {
-      toast.error(error.message || 'Google sign-in failed')
-    } finally {
-      setGoogleLoading(false)
-    }
-  }
+ 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center px-4">
@@ -102,15 +91,7 @@ export default function SignInPage() {
           </button>
         </form>
 
-        <div className="flex flex-col space-y-2 pt-4">
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading}
-            className="w-full bg-white border border-gray-300 rounded-xl py-2 text-sm font-medium hover:bg-gray-100 flex justify-center items-center"
-          >
-            {googleLoading ? 'Loading...' : 'Continue with Google'}
-          </button>
-        </div>
+      
 
         <p className="text-center text-sm text-gray-500">
           Don&apos;t have an account?{' '}

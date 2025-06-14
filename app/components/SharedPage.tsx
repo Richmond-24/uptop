@@ -128,15 +128,7 @@ export default function SharedFilesPage() {
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Shared Items</h1>
-          <label className="text-sm text-blue-600 cursor-pointer">
-            <input
-              type="file"
-              accept=".json"
-              className="hidden"
-              onChange={handleImportSharedFile}
-            />
-            Import Shared File
-          </label>
+        
         </div>
 
         {folderPath.length > 0 && (
@@ -189,7 +181,7 @@ export default function SharedFilesPage() {
                   className="mt-2 w-full flex items-center justify-center gap-2 text-white bg-blue-600 hover:bg-blue-700 text-xs py-1.5 rounded"
                 >
                   <FaUpload />
-                  Download
+                  share
                 </button>
               </div>
             ))}
