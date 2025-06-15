@@ -9,8 +9,10 @@ import {
   FaChevronRight,
   FaUpload,
   FaWhatsapp,
+  FaLink
 } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
+import { uploadToCloudinary } from '@/lib/Cloudinary';
 
 interface FileData {
   id: string;
@@ -41,8 +43,6 @@ export default function SharedFilesPage() {
   const [sharedItems, setSharedItems] = useState<FileData[]>([]);
   const [folderPath, setFolderPath] = useState<{ id: string | null; name: string }[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
-
-  const [showModal, setShowModal] = useState(false);
   const [fileToShare, setFileToShare] = useState<FileData | null>(null);
 
   useEffect(() => {
@@ -72,30 +72,41 @@ export default function SharedFilesPage() {
     setFolderPath((prev) => prev.slice(0, index + 1));
   };
 
-  const downloadSharedFile = (file: FileData) => {
+  const generateShareLink = async (file: FileData): Promise<string> => {
     try {
-      const fileToExport = {
-        ...file,
-        sharedAt: new Date().toISOString(),
-      };
+      const blob = new Blob([file.content], { type: file.type });
+      const fileUrl = await uploadToCloudinary(blob, file.name);
 
-      const blob = new Blob([JSON.stringify([fileToExport])], {
-        type: 'application/json',
-      });
+      if (!fileUrl) {
+        console.error('Cloudinary returned empty URL for', file.name);
+        toast.error('Cloudinary upload returned no URL.');
+        return '';
+      }
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${file.name.replace(/\s+/g, '_')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      setFileToShare(file);
-      setTimeout(() => setShowModal(true), 300);
-    } catch (err) {
-      toast.error('Failed to prepare file for sharing');
+      setFileToShare({ ...file, sharedAt: new Date().toISOString() });
+      return fileUrl;
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      toast.error(`Upload failed: ${err.message || err}`);
+      return '';
     }
+  };
+
+  const handleCopyLink = async (file: FileData) => {
+    const link = await generateShareLink(file);
+    if (!link) return;
+
+    await navigator.clipboard.writeText(link);
+    toast.success('Link copied to clipboard!');
+  };
+
+  const handleShareWhatsApp = async (file: FileData) => {
+    const link = await generateShareLink(file);
+    if (!link) return;
+
+    const message = `📁 I've shared a file with you: ${link}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleImportSharedFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +139,6 @@ export default function SharedFilesPage() {
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Shared Items</h1>
-        
         </div>
 
         {folderPath.length > 0 && (
@@ -176,52 +186,27 @@ export default function SharedFilesPage() {
                 <p className="text-xs text-green-600 mt-1">
                   Shared: {new Date(item.sharedAt || '').toLocaleString()}
                 </p>
-                <button
-                  onClick={() => downloadSharedFile(item)}
-                  className="mt-2 w-full flex items-center justify-center gap-2 text-white bg-blue-600 hover:bg-blue-700 text-xs py-1.5 rounded"
-                >
-                  <FaUpload />
-                  share
-                </button>
+                <div className="flex flex-col mt-2 space-y-1">
+                  <button
+                    onClick={() => handleCopyLink(item)}
+                    className="w-full flex items-center justify-center gap-2 text-white bg-gray-700 hover:bg-gray-800 text-xs py-1.5 rounded"
+                  >
+                    <FaLink />
+                    Copy
+                  </button>
+                  <button
+                    onClick={() => handleShareWhatsApp(item)}
+                    className="w-full flex items-center justify-center gap-2 text-white bg-green-600 hover:bg-green-700 text-xs py-1.5 rounded"
+                  >
+                    <FaWhatsapp />
+                    Share
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* Share Confirmation Modal */}
-      {showModal && fileToShare && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-lg">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Share via WhatsApp?
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              You've downloaded "<strong>{fileToShare.name}</strong>".<br />
-              Do you want to share it via WhatsApp now?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
-              >
-                No, Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const message = `📁 I've just downloaded and want to share "${fileToShare.name}" with you. Please import the .json file in your app.`;
-                  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-                  window.open(whatsappUrl, '_blank');
-                  setShowModal(false);
-                }}
-                className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm"
-              >
-                Yes, Share
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

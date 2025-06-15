@@ -131,13 +131,6 @@ export default function SignUpPage() {
           </button>
         </form>
 
-        <div className="flex flex-col space-y-2 pt-4">
-          <button
-            className="w-full bg-[#4285F4] text-white rounded-xl py-2 text-sm font-medium hover:bg-[#357ae8] transition"
-          >
-            {googleLoading ? 'Loading...' : 'Continue with Google'}
-          </button>
-        </div>
 
         <p className="text-center text-sm text-gray-500">
           Already have an account?{' '}

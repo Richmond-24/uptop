@@ -1,9 +1,10 @@
 'use client'
-import HomePage from "./components/HomePage";
+import SplashPage from "./splash/page";
+
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <HomePage/>
+      <SplashPage />
     </main>
   );
 }
